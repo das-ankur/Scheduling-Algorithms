@@ -4,7 +4,6 @@ class process {                 //This  class contains all different attributes 
     int id;                     //process id
     int atime;                  //arrival time
     int btime;                  //burst time
-    int ibtime;                 //stores initial burst time
     int wtime;                  //waiting time
     int tatime;                 //turnaround time
     int ltime;                  //last observed by process
@@ -15,10 +14,15 @@ class process {                 //This  class contains all different attributes 
         this.btime = btime;
         this.wtime = 0;
         this.ltime = atime;
-        this.ibtime = btime;
+    }
+    process(process temp) {                           //Initializes different attributes of a process
+        this.id = temp.id;
+        this.atime = temp.atime; 
+        this.btime = temp.btime;
     }
 }
 public class Custom {
+    static process c[] = new process[40];                           //Holds completed process
     static process queue0[] = new process[10];                      //Holds System Process
     static process queue1[] = new process[10];                      //Holde Interactive process
     static process queue2[] = new process[10];                      //Holds normal process
@@ -26,9 +30,10 @@ public class Custom {
     static int front0 = -1, rear0 = -1;                             //front and rear  of queue0
     static int front1 = -1, rear1 = -1;                             //front and rear  of queue1
     static int front2 = -1, rear2 = -1;                             //front and rear  of queue2
-    static int front3 = -1, rear3 = -1;                             //front and rear  of queue3 static process processes[] = new process[40];                  //Contain all the completed process temporarily
-    static int front =0, rear = 0;                                  //front and rear of processes queue
+    static int front3 = -1, rear3 = -1;                             //front and rear  of queue3
+    static process p[] = new process[40];                           //Contain all the process temporarily
     static int n=0;                                                 //no. of processes
+    static int burst_time[] = new int[40];                          //Array holds the burst time of the processes
     static void insert0(process p) {                                //Insert a process in first queue: Always inserts at the top position
         if(front0 == -1 && rear0 == -1) {                               
             front0 = 0;
@@ -113,149 +118,98 @@ public class Custom {
         }
         return current;
     }
+    static boolean isQueue0Empty() {                            //Checks queue0 is empty or not
+        return front0==-1 && rear0==-1;
+    }
+    static boolean isQueue1Empty() {                            //Checks queue1 is empty or not
+        return front1==-1 && rear1==-1;
+    }
+    static boolean isQueue2Empty() {                            //Checks queue2 is empty or not
+        return front2==-1 && rear2==-1;
+    }
+    static boolean isQueue3Empty() {                            //Checks queue3 is empty or not
+        return front3==-1 && rear3==-1;
+    }
     static void executeProcess() {                               //Execute all process and print summary
         int time = 0;                                            //System time
         int wasted = 0;                                          //Total wasted time
-        process current = null;                                 //References a particular process temporarily
-        int total_wtime = 0;                                    //holds total waiting time of processes
-        int total_tatime = 0;                                   //holds total turn aroung time of processes
-        int total_btime = 0;                                    //holds total burst time of processes
-        int total_restime =  0;                                 //holds total response time of processess
+        process current;                                        //References a particular process temporarily
         while(front0 != -1 && rear0 != -1) {                    //Executes process of  first queue which has the highest priority
             current = delete0();                                //Delete the process from queue which is executing
             if(current.atime>time) {                            //Calculate wasted time
-                while(time<current.atime) {                     //Check if any process presents in system or not
+                while(time<current.atime) {
                     System.out.println("<System time\t"+time+"> No process is running.");
                     time++;
                     wasted++;
                 }
             }
             if(current.ltime==current.atime) {                      //Calculates response time
-                current.rtime = time - current.atime;
+                current.rtime = time - current.ltime;
             }
             current.wtime += time -  current.ltime;
             if(current.btime<=3) {                                   //Executes the process
                 int i=0;
                 while(i<current.btime) {
                     System.out.println("<System time\t"+time+"> process "+current.id+" is running.");
+                    current.btime++;
                     time++;
-                    i++;
                 }
-                current.btime = 0;
                 current.ltime = time;
-                System.out.println("<System time\t"+current.ltime+"> process "+current.id+" is finished...");
-                current.tatime = current.ltime - current.atime; //Calculate the turnaround time, waiting time and response time of completed process
-                total_tatime = total_tatime + current.tatime;                           
-                total_wtime = total_wtime + current.wtime;
-                total_btime = total_btime + current.ibtime;
-                total_restime = total_restime + current.rtime;
-                //Print details of finished process
-                System.out.println("Arrival Time: "+current.atime+" Burst Time: "+current.ibtime+" Response Time: "+current.rtime+" Waiting Time: "+current.wtime+" Turnaround Time: "+current.tatime);
             }
             else {
                 int i=0;
-                while(i<3) {           //For first queue quantum time is 3
+                while(i<current.btime) {
                     System.out.println("<System time\t"+time+"> process "+current.id+" is running.");
-                    current.btime--;
-                    time++;
-                    i++;
+                    current.btime++;
                 }
                 current.ltime = time;
                 insert1(current);
             }
         }
-        while(front1 != -1 && rear1 != -1) {                    //Executes process of  first queue which has the highest priority
-            current = delete1();                                //Delete the process from queue which is executing
-            current.wtime += time -  current.ltime;
-            if(current.btime<=4) {                             //Executes the process
-                int i=0;
-                while(i<current.btime) {
-                    System.out.println("<System time\t"+time+"> process "+current.id+" is running.");
-                    time++;
-                    i++;
-                }
-                current.btime = 0;
-                current.ltime = time;
-                System.out.println("<System time\t"+current.ltime+"> process "+current.id+" is finished...");
-                current.tatime = current.ltime - current.atime; 
-                total_tatime = total_tatime + current.tatime;                           
-                total_wtime = total_wtime + current.wtime;
-                total_btime = total_btime + current.ibtime;
-                total_restime = total_restime + current.rtime;
-                System.out.println("Arrival Time: "+current.atime+" Burst Time: "+current.ibtime+" Response Time: "+current.rtime+" Waiting Time: "+current.wtime+" Turnaround Time: "+current.tatime);
-            }
-            else {
-                int i=0;
-                while(i<4) {                                    //For second queue quantum time is 4
-                    System.out.println("<System time\t"+time+"> process "+current.id+" is running.");
-                    current.btime--;
-                    time++;
-                    i++;
-                }
-                current.ltime = time;
-                insert2(current);
-            }
+        int total_wtime = 0;
+        int total_tatime = 0;
+        int total_btime = 0;
+        for(int i=0;i<n;i++) {                                  //Calculate total waiting time, burst time and turnaround time
+            total_wtime += p[i].wtime;
+            total_tatime += p[i].tatime;
+            total_btime += p[i].btime;
         }
-        while(front2 != -1 && rear2 != -1) {                    //Executes process of  first queue which has the highest priority
-            current = delete2();                                //Delete the process from queue which is executing
-            current.wtime += time -  current.ltime;
-            if(current.btime<=5) {                                   //Executes the process
-                int i=0;
-                while(i<current.btime) {
-                    System.out.println("<System time\t"+time+"> process "+current.id+" is running.");
-                    time++;
-                    i++;
+        /*
+        System.out.println("\nProcess\tArrival Time\tBrust Time\tType\t\tTurnaround Time\tWaiting Time");     //Summary of each process
+		for(int i=0;i<n;i++)
+		{
+		    if(p[i].type.equals("INTERACTIVE"))
+		        System.out.println("  "+p[i].id+"\t\t"+p[i].atime+"\t"+p[i].btime+"\t\t"+p[i].type+"\t\t"+p[i].tatime+"\t\t"+p[i].wtime);
+		    else
+			    System.out.println("  "+p[i].id+"\t\t"+p[i].atime+"\t"+p[i].btime+"\t\t"+p[i].type+"\t\t\t"+p[i].tatime+"\t\t"+p[i].wtime);
+		}
+        System.out.println("\n\nSystem Summary...\n");                          //Summary of the system while processes are executing
+        for(int i=0;i<n;i++)  {
+            if(t<p[i].atime) {
+                while(t<p[i].atime) {                                                   //Print while processes are not executing in the system
+                    System.out.println("<System time\t"+t+"> No process is running.");
+                    t++;
                 }
-                current.btime = 0;
-                current.ltime = time;
-                System.out.println("<System time\t"+current.ltime+"> process "+current.id+" is finished...");
-                current.tatime = current.ltime - current.atime; 
-                total_tatime = total_tatime + current.tatime;                           
-                total_wtime = total_wtime + current.wtime;
-                total_btime = total_btime + current.ibtime;
-                total_restime = total_restime + current.rtime;
-                System.out.println("Arrival Time: "+current.atime+" Burst Time: "+current.ibtime+" Response Time: "+current.rtime+" Waiting Time: "+current.wtime+" Turnaround Time: "+current.tatime);
             }
-            else {
-                int i=0;
-                while(i<5) {                                        //For third queue quantum time is 5
-                    System.out.println("<System time\t"+time+"> process "+current.id+" is running.");
-                    current.btime--;
-                    time++;
-                    i++;
-                }
-                current.ltime = time;
-                insert3(current);
+            int j =0;
+            while(j<p[i].btime) {                                                   
+                System.out.println("<System time\t"+t+"> process "+p[i].id+" is running.");
+                t++;
+                j++;
             }
-        }
-        while(front3 != -1 && rear3 != -1) {                    //Executes process of  first queue which has the highest priority
-            current = delete3();                                //Delete the process from queue which is executing
-            current.wtime += time -  current.ltime;            //Executes the process
-            int i=0;
-            while(i<current.btime) {                               //Last queue execute the processin non-preemptive approach
-                System.out.println("<System time\t"+time+"> process "+current.id+" is running.");
-                time++;
-                i++;
-            }
-            current.btime = 0;
-            current.ltime = time;
-            System.out.println("<System time\t"+current.ltime+"> process "+current.id+" is finished...");
-            current.tatime = current.ltime - current.atime; 
-            total_tatime = total_tatime + current.tatime;                           
-            total_wtime = total_wtime + current.wtime;
-            total_btime = total_btime + current.ibtime;
-            total_restime = total_restime + current.rtime;
-            System.out.println("Arrival Time: "+current.atime+" Burst Time: "+current.ibtime+" Response Time: "+current.rtime+" Waiting Time: "+current.wtime+" Turnaround Time: "+current.tatime);
+            System.out.println("<System time\t"+t+"> process "+p[i].id+" is finished...");
         }
         System.out.println("Average waiting time:  " + (float)total_wtime/(float)n);
         System.out.println("Average turnaround time: " + (float)total_tatime/(float)n);
-        System.out.println("Average response time: " + (float)total_restime/(float)n);
+        System.out.println("Average response time: " + (float)total_tatime/(float)n);
         System.out.println("Average CPU usage: " + (float)total_btime/(float)time*100.0);
+        */
     }
     public static void main(String[] args)  {
         try {
             File myObj = new File("input.txt");
             Scanner myReader = new Scanner(myObj);
+            int n = 0;
             while (myReader.hasNextLine()) {                        //Read input from a file: The file name should be "input.txt"
                 String data = myReader.nextLine();
                 String temp[] = data.split(" ");
@@ -268,6 +222,10 @@ public class Custom {
             System.out.println("An error occurred.");
             e.printStackTrace();                                    //Display the report of exception
         }
-        executeProcess();                                           //Execute all the processes in the system
+        for(int i=0;i<n;i++)                                        //Stores all processes burst time in an array
+            burst_time[i] = queue0[i].btime;
+        for(int i=0;i<n;i++)                                        //Stores all processes in process
+            p[i] = new process(queue0[i]);
+        executeProcess();
     }
 }
